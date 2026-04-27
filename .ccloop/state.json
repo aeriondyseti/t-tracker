@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "run_id": "e1dd727c-dd9f-4542-b1d8-69ddc47e3c6a",
+  "started_at": "2026-04-27T23:42:59.555Z",
+  "current_step": 1,
+  "wall_clock_ms": 0,
+  "session_id": null,
+  "consecutive_failures": 0,
+  "no_progress_count": 0,
+  "diff_hashes_recent": [],
+  "state": "running",
+  "pause": null,
+  "escalation": null,
+  "guardrail_trip": null
+}
