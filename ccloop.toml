@@ -5,7 +5,7 @@ schema_version = 1
 
 [loop]
 # Hard cap on total steps in this run. 0 disables.
-max_steps = 200
+max_steps = 1000
 
 # Hard cap on wall-clock time across all instances of this run.
 # Pause time is not counted; cadence-sleep time is. Empty disables.
@@ -14,7 +14,7 @@ max_wall_clock = "8h"
 
 # Target time between step starts (seconds). If a step's own duration
 # exceeds this, the loop runs as fast as steps complete. 0 disables.
-target_cadence_seconds = 240
+target_cadence_seconds = 0
 
 # Window-utilization thresholds (percent, 0-100), checked against
 # Anthropic's /api/oauth/usage endpoint pre-flight on every step.
@@ -37,7 +37,7 @@ yolo_mode = false
 
 # SDK's maxTurns. Bounds Anthropic-turns per ccloop step. (Anthropic
 # "turn" = ccloop "inference"; see SPEC §2.5.)
-max_turns_per_step = 50
+max_turns_per_step = 100
 
 # How many auto-continuations after stop_reason="pause_turn" within
 # the same ccloop step before giving up.
@@ -48,7 +48,7 @@ effort = "xhigh"
 
 [failure]
 # After this many consecutive step failures, escalate.
-consecutive_failures_before_escalation = 3
+consecutive_failures_before_escalation = 5
 
 # Backoff between retries, indexed by failure count (seconds).
 backoff = [30, 60, 120]
