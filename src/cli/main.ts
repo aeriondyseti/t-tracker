@@ -2,8 +2,9 @@
 // CLI entry point
 
 import { Command } from "commander";
-import { DaemonClient, resolveIDPrefix } from "./client.ts";
 import { now } from "../core/model.ts";
+import { DaemonClient, resolveIDPrefix } from "./client.ts";
+import { runPicker } from "./picker.ts";
 
 const program = new Command();
 const client = new DaemonClient();
@@ -13,10 +14,18 @@ program
   .description("Frictionless CLI task tracker with daemon and sync")
   .version("0.1.0");
 
-// Default command (fzf picker) - placeholder for Step 6
-program.action(() => {
-  console.error("fzf picker not yet implemented (Step 6)");
-  process.exit(0);
+// Default command: fzf picker
+program.action(async () => {
+  try {
+    if (!(await client.health())) {
+      console.error("daemon not running; run 't daemon start' or 't init'");
+      process.exit(2);
+    }
+    await runPicker(client);
+  } catch (err) {
+    console.error(`error: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
 });
 
 // Add command
@@ -54,59 +63,57 @@ program
   .option("--project <name>", "Filter by project")
   .option("--status <status>", "Filter by status")
   .option("--tag <tag>", "Filter by tag")
-  .action(
-    async (options: { all?: boolean; project?: string; status?: string; tag?: string }) => {
-      try {
-        if (!(await client.health())) {
-          console.error("daemon not running; run 't daemon start' or 't init'");
-          process.exit(2);
-        }
-
-        const { tasks, projects } = await client.listTasks();
-
-        // Build project name map
-        const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-
-        // Filter tasks
-        const filtered = tasks.filter((t) => {
-          // Skip deleted
-          if (t.deleted_at !== null) return false;
-
-          // Filter by status (default: show only inbox+active+blocked)
-          if (!options.all && !["inbox", "active", "blocked"].includes(t.status)) {
-            return false;
-          }
-          if (options.status && t.status !== options.status) {
-            return false;
-          }
-
-          // Filter by project
-          if (options.project) {
-            const projectName = projectMap.get(t.project_id);
-            if (projectName !== options.project) return false;
-          }
-
-          // Filter by tag
-          if (options.tag && !t.tags.includes(options.tag)) {
-            return false;
-          }
-
-          return true;
-        });
-
-        // Output tab-separated
-        for (const t of filtered) {
-          const shortID = t.id.slice(0, 8);
-          const projectName = projectMap.get(t.project_id) || "unknown";
-          const tags = t.tags.join(",");
-          console.log(`${shortID}\t${t.status}\t${projectName}\t${t.title}\t${tags}`);
-        }
-      } catch (err) {
-        console.error(`error: ${err instanceof Error ? err.message : String(err)}`);
-        process.exit(1);
+  .action(async (options: { all?: boolean; project?: string; status?: string; tag?: string }) => {
+    try {
+      if (!(await client.health())) {
+        console.error("daemon not running; run 't daemon start' or 't init'");
+        process.exit(2);
       }
-    },
-  );
+
+      const { tasks, projects } = await client.listTasks();
+
+      // Build project name map
+      const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+
+      // Filter tasks
+      const filtered = tasks.filter((t) => {
+        // Skip deleted
+        if (t.deleted_at !== null) return false;
+
+        // Filter by status (default: show only inbox+active+blocked)
+        if (!options.all && !["inbox", "active", "blocked"].includes(t.status)) {
+          return false;
+        }
+        if (options.status && t.status !== options.status) {
+          return false;
+        }
+
+        // Filter by project
+        if (options.project) {
+          const projectName = projectMap.get(t.project_id);
+          if (projectName !== options.project) return false;
+        }
+
+        // Filter by tag
+        if (options.tag && !t.tags.includes(options.tag)) {
+          return false;
+        }
+
+        return true;
+      });
+
+      // Output tab-separated
+      for (const t of filtered) {
+        const shortID = t.id.slice(0, 8);
+        const projectName = projectMap.get(t.project_id) || "unknown";
+        const tags = t.tags.join(",");
+        console.log(`${shortID}\t${t.status}\t${projectName}\t${t.title}\t${tags}`);
+      }
+    } catch (err) {
+      console.error(`error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+  });
 
 // Status change commands
 const statusCommands = [

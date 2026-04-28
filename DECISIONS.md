@@ -66,3 +66,53 @@ binaries (`t`, `t-daemon`, `t-server`).
 resets and downstream artifacts (CI, package metadata, service-unit
 templates) all change shape.
 
+
+---
+
+## 2026-04-28 — Step 6 fzf picker: split into pure helpers + spawn shell
+
+**Context:** Step 6 (CLI fzf integration) per SPEC.md §6. The interactive
+spawn loop is hard to unit-test without a TTY and a real fzf process.
+
+**Choice:** Split `src/cli/picker.ts` into pure functions
+(`nextStatus`, `formatPickerLine`, `parsePickerLine`, `buildPickerInput`,
+`fzfAvailable`) covered by `src/cli/picker.test.ts`, plus an integration
+shell (`runFzf`, `runPicker`) that wires them to `node:child_process.spawn`
+and the daemon client. Tests cover: status cycle wrapping, line format with
+and without tags, missing-project fallback, short-id parsing, and the
+visibility filter (hides done, archived, soft-deleted).
+
+**Alternatives:**
+- Pseudo-TTY harness for end-to-end fzf — rejected as disproportionate to
+  the gain; the value of step 6 is the formatting and the cycle, both pure.
+- `vitest` for snapshot-style tests — forbidden by §1 (bun:test only).
+
+**Reversibility:** Easy. Helpers are exported; the spawn shell can be
+rewritten without touching them.
+
+---
+
+## 2026-04-28 — ccloop step counter unreliable; KNOWN_GAPS is the truth
+
+**Context:** `.ccloop/state.json` reported `current_step: 11`, but
+`src/cli/picker.ts`, `src/core/sync.ts`, `src/core/service.ts`,
+`src/cli/lifecycle.ts`, and `src/server/main.ts` were 2-line placeholders.
+Earlier autonomous iterations advanced the step counter while doing
+lower-numbered work (commit subjects like "I'll continue with Step 4:
+Daemon binary" attached to a step-10 commit).
+
+**Choice:** Treat `KNOWN_GAPS.md` as the source of truth for build
+progress. Resume work from the lowest actually-unbuilt step (Step 6 this
+iteration). Do not rewrite `state.json` — that is the orchestrator's
+ledger; corrupting it would only deepen the confusion. Future iterations
+should read `KNOWN_GAPS.md` before trusting `state.json`.
+
+**Alternatives:**
+- Manually rewrite `state.json` to step 6 — rejected; the orchestrator
+  treats it as authoritative and may interpret a backwards step as a
+  guardrail trip.
+- Skip ahead to Step 11 (Docker) since the counter says so — rejected by
+  SPEC.md §0.3 ("Build in this exact order. Do NOT skip ahead.") and by
+  §0.5 ("'Mostly working' is not 'working'").
+
+**Reversibility:** Easy; KNOWN_GAPS.md is just a markdown file.

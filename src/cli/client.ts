@@ -1,7 +1,23 @@
 // Typed HTTP client to daemon
-import type { Project, Task } from "../core/model.ts";
+import { z } from "zod";
+import { type Project, ProjectSchema, type Task, TaskSchema } from "../core/model.ts";
 
 const DAEMON_ADDR = "http://127.0.0.1:9999";
+
+const ErrorSchema = z.object({ error: z.string() }).partial();
+const ListTasksSchema = z.object({
+  tasks: z.array(TaskSchema),
+  projects: z.array(ProjectSchema),
+});
+
+async function parseError(res: Response): Promise<string> {
+  try {
+    const body = ErrorSchema.parse(await res.json());
+    return body.error ?? `HTTP ${res.status}`;
+  } catch {
+    return `HTTP ${res.status}`;
+  }
+}
 
 export class DaemonClient {
   private baseURL: string;
@@ -31,11 +47,10 @@ export class DaemonClient {
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || `HTTP ${res.status}`);
+      throw new Error(await parseError(res));
     }
 
-    return res.json();
+    return TaskSchema.parse(await res.json());
   }
 
   async listTasks(): Promise<{ tasks: Task[]; projects: Project[] }> {
@@ -43,7 +58,7 @@ export class DaemonClient {
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
-    return res.json();
+    return ListTasksSchema.parse(await res.json());
   }
 
   async updateTask(
@@ -62,11 +77,10 @@ export class DaemonClient {
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || `HTTP ${res.status}`);
+      throw new Error(await parseError(res));
     }
 
-    return res.json();
+    return TaskSchema.parse(await res.json());
   }
 
   async listProjects(): Promise<Project[]> {
@@ -74,7 +88,7 @@ export class DaemonClient {
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
-    return res.json();
+    return z.array(ProjectSchema).parse(await res.json());
   }
 
   async createProject(name: string): Promise<Project> {
@@ -85,11 +99,10 @@ export class DaemonClient {
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || `HTTP ${res.status}`);
+      throw new Error(await parseError(res));
     }
 
-    return res.json();
+    return ProjectSchema.parse(await res.json());
   }
 
   async updateProject(id: string, updates: { deleted_at?: number }): Promise<Project> {
@@ -100,11 +113,10 @@ export class DaemonClient {
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || `HTTP ${res.status}`);
+      throw new Error(await parseError(res));
     }
 
-    return res.json();
+    return ProjectSchema.parse(await res.json());
   }
 }
 
