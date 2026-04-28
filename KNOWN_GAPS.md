@@ -1,6 +1,8 @@
 # Known Gaps
 
 This file tracks items that are deferred or blocked, per SPEC.md §0.5.
+Because this repo is being built with an alpha version of ccloop, it is possible that some 
+or all of these are outdated and no longer apply.
 
 ---
 
