@@ -1,9 +1,21 @@
 #!/usr/bin/env bun
 // CLI entry point
 
+import { existsSync } from "node:fs";
 import { Command } from "commander";
 import { now } from "../core/model.ts";
 import { DaemonClient, resolveIDPrefix } from "./client.ts";
+import {
+  configPath,
+  defaultConfig,
+  execLogs,
+  loadConfig,
+  pollHealth,
+  runInit,
+  runShellCommand,
+  runStatus,
+  serviceCommands,
+} from "./lifecycle.ts";
 import { runPicker } from "./picker.ts";
 
 const program = new Command();
@@ -223,13 +235,117 @@ projectCmd
     }
   });
 
-// Sync command - placeholder for Step 7
+// Sync command - daemon hits its own /sync endpoint when implemented;
+// for now invoke the engine via daemon by triggering a write that pings.
 program
   .command("sync")
   .description("Force immediate sync with server")
-  .action(() => {
-    console.error("sync command not yet implemented (Step 7)");
-    process.exit(1);
+  .action(async () => {
+    try {
+      if (!(await client.health())) {
+        console.error("daemon not running; run 't daemon start' or 't init'");
+        process.exit(2);
+      }
+      const res = await fetch("http://127.0.0.1:9999/sync", { method: "POST" });
+      if (!res.ok) {
+        console.error(`sync: HTTP ${res.status}`);
+        process.exit(1);
+      }
+      console.log(await res.text());
+    } catch (err) {
+      console.error(`error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+  });
+
+// --- Lifecycle commands (Step 9) ---
+
+const platform = process.platform;
+
+program
+  .command("init")
+  .description("One-time per-machine setup (idempotent)")
+  .option("--server-url <url>", "Server URL (skips prompt)")
+  .option("--server-token <token>", "Server token (skips prompt)")
+  .action(async (opts: { serverUrl?: string; serverToken?: string }) => {
+    try {
+      const result = await runInit(platform, {
+        serverUrl: opts.serverUrl,
+        serverToken: opts.serverToken,
+      });
+      if (result.wroteConfig) {
+        console.log(`wrote ${result.configPath}`);
+        if (!opts.serverToken) {
+          console.log("set server_token in the config before sync will work");
+        }
+      } else {
+        console.log(`config already exists at ${result.configPath}`);
+      }
+      const start = serviceCommands(platform).start;
+      const r = runShellCommand(start);
+      if (r.status !== 0) {
+        console.error(`failed to start daemon via ${start.command}: ${r.stderr.trim()}`);
+        console.error(
+          "if the service unit is not yet installed, render and install it from src/core/service.ts (Step 8)",
+        );
+        process.exit(2);
+      }
+      const ok = await pollHealth("http://127.0.0.1:9999", 5000);
+      if (!ok) {
+        console.error("daemon did not become healthy within 5s; check 't daemon logs'");
+        process.exit(2);
+      }
+      console.log("✓ daemon running");
+    } catch (err) {
+      console.error(`error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+  });
+
+const daemonCmd = program.command("daemon").description("Daemon lifecycle");
+
+for (const action of ["start", "stop", "restart"] as const) {
+  daemonCmd
+    .command(action)
+    .description(`${action} the daemon via the platform service manager`)
+    .action(() => {
+      const sc = serviceCommands(platform)[action];
+      const r = runShellCommand(sc);
+      if (r.status !== 0) {
+        console.error(`${action} failed: ${r.stderr.trim() || `exit ${r.status}`}`);
+        process.exit(2);
+      }
+    });
+}
+
+daemonCmd
+  .command("logs")
+  .description("Tail daemon logs")
+  .option("--follow", "follow new log entries")
+  .action((opts: { follow?: boolean }) => {
+    execLogs(platform, opts.follow === true);
+  });
+
+program
+  .command("status")
+  .description("Daemon health, sync state, task counts")
+  .action(async () => {
+    const cfgPath = configPath(platform);
+    const cfg = existsSync(cfgPath) ? loadConfig(cfgPath) : defaultConfig();
+    const report = await runStatus(platform, client, cfg);
+    if (report.daemon === "not_running") {
+      console.log("daemon: not running");
+      process.exit(0);
+    }
+    console.log(`daemon: running${report.pid !== null ? ` (pid: ${report.pid})` : ""}`);
+    console.log(`port: ${report.daemonPort}`);
+    console.log(`server: ${report.serverURL} (${report.serverReachable ? "ok" : "unreachable"})`);
+    const counts = Object.entries(report.taskCounts).sort();
+    if (counts.length === 0) {
+      console.log("tasks: 0");
+    } else {
+      console.log(`tasks: ${counts.map(([s, n]) => `${s}=${n}`).join(" ")}`);
+    }
   });
 
 program.parse();

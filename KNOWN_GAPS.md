@@ -33,14 +33,31 @@ spawn loop (`runFzf`, `runPicker`) is wired into the default `t` command
 in `src/cli/main.ts`. Missing-fzf detection prints an install hint and
 exits 2.
 
+### Step 7 — completed
+Sync engine in `src/core/sync.ts`; §10.6 tests in `src/core/sync.test.ts`.
+
+### Step 8 — completed
+Service unit generation in `src/core/service.ts`; §10.8 golden tests in
+`src/core/service.test.ts`; goldens at `src/core/testdata/`.
+
+### Step 9 — completed
+`src/cli/lifecycle.ts` (config schema, path helpers, service-manager
+shellouts, health polling, init/status); wired into `src/cli/main.ts`
+(`t init`, `t daemon start/stop/restart/logs`, `t status`).
+`src/cli/lifecycle.test.ts` includes the §10.9 regex-based static check.
+
 ### Still unbuilt (in order)
-- Step 7 — Sync engine (`src/core/sync.ts` + tests per §10.6)
-- Step 8 — Service unit generation (`src/core/service.ts` + golden tests per §10.8)
-- Step 9 — CLI lifecycle commands (`t init`, `t daemon *`, `t status`)
 - Step 10 — Server binary with auth middleware (§7)
 - Step 11 — Docker artifacts (`deploy/Dockerfile`, `deploy/docker-compose.yml`) — gated on Step 10
 - Step 12 — Docs + CI verification
 
-The `t edit`, `t sync`, `t status`, `t init`, `t daemon *` commands in
-`src/cli/main.ts` remain placeholders that exit non-zero with a clear
-message. They will be filled in by Steps 7 and 9.
+### Smaller deferred items
+- `t edit`: still a placeholder; needs `$EDITOR` integration (notes
+  field round-trip via the daemon API).
+- `t sync`: CLI surface POSTs to `/sync`, but the daemon does not yet
+  expose `/sync` (the `SyncEngine` wiring inside `daemon/main.ts` is
+  pending). Deferred to step 10/11 daemon refactor.
+- `t daemon restart` on macOS uses `launchctl kickstart -k
+  gui/<uid>/net.dyseti.t-daemon`; the uid is read via `process.getuid()`
+  with a fallback to 501. May need adjustment for non-default macOS
+  user uids — confirm during manual FIRST_RUN walkthrough.

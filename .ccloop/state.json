@@ -3,7 +3,7 @@
   "orchestrator": "claude-code",
   "spec": "SPEC.md §0.3",
   "updated_at": "2026-04-28T00:00:00Z",
-  "current_step": 9,
+  "current_step": 10,
   "steps": {
     "1": { "name": "Skeleton",                "status": "done" },
     "2": { "name": "Model + store",           "status": "done" },
@@ -13,7 +13,7 @@
     "6": { "name": "CLI fzf integration",     "status": "done" },
     "7": { "name": "Sync engine",             "status": "done" },
     "8": { "name": "Service unit generation", "status": "done" },
-    "9": { "name": "CLI lifecycle commands",  "status": "todo" },
+    "9": { "name": "CLI lifecycle commands",  "status": "done" },
     "10": { "name": "Server binary",          "status": "todo" },
     "11": { "name": "Docker artifacts",       "status": "todo" },
     "12": { "name": "Documentation + CI",     "status": "todo" }
@@ -21,7 +21,7 @@
   "gates": {
     "typecheck": "pass",
     "lint": "pass",
-    "test": "pass (74)",
+    "test": "pass (87)",
     "compile_linux": "pass",
     "last_verified_at": "2026-04-28T00:00:00Z"
   },

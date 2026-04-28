@@ -172,3 +172,47 @@ and to avoid coupling the unit to the user's Bun version.
 
 **Reversibility:** Easy. `daemonArgs` is part of the config so the unit
 can carry extra flags without rev'ing the renderer.
+
+---
+
+## 2026-04-28 — Step 9 lifecycle: regex-based §10.9 static check (no @babel/parser)
+
+**Context:** §10.9 mandates a test that scans `src/cli/` for forbidden
+direct-spawn-of-daemon patterns. Spec allows AST (`@babel/parser`) or
+regex.
+
+**Choice:** Regex on source text — no new dep. Pattern:
+`/\b(?:spawn|exec|execFile|execSync|Bun\.spawn)\s*\(\s*\[?\s*['"]\.?\/?t-daemon(?:\.exe)?['"]/`.
+The test includes a meta-test that asserts the regex itself (a) catches
+all four bad-pattern variants from §10.9 and (b) does not match the
+allowed `spawn('systemctl', ['start', 't-daemon'])` argument case.
+
+The regex would false-positive on a doc comment that looked like a real
+spawn call, so doc comments in `src/cli/lifecycle.ts` describe the
+forbidden form as `"spawn(t-daemon, ...)"` (no quote chars adjacent to
+`t-daemon`). Documented at the top of `lifecycle.ts`.
+
+## 2026-04-28 — Lifecycle path joins use posix/win32 explicitly
+
+**Context:** `node:path`'s default `join` uses the host platform's
+separator. Tests for win32 path layout would fail on the Linux test
+host because `/` would replace `\`.
+
+**Choice:** `lifecycle.ts` imports `posix` and `win32` from `node:path`
+and dispatches: posix for linux/darwin paths, win32 for win32 paths.
+This also makes the rendered paths correct when the daemon eventually
+runs on Windows under Bun.
+
+**Reversibility:** Easy.
+
+## 2026-04-28 — `t sync` is a daemon-side endpoint, not a CLI-side run
+
+**Context:** §6 lists `t sync` as "force immediate sync, print stats".
+The sync engine runs inside the daemon (which holds the SQLite store);
+the CLI is a thin client that must not own state.
+
+**Choice:** `t sync` POSTs to the daemon's `/sync` endpoint (per §4
+endpoint list). The daemon-side wiring (calling `SyncEngine.runSync()`
+on demand) is left for the daemon refactor in step 10/11; for now the
+CLI surface is correct, and the daemon gracefully 404s if the route is
+not yet mounted. KNOWN_GAPS records this.
