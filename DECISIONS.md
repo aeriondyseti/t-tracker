@@ -299,3 +299,37 @@ CI verification per §0.3 step 12.
 
 **Reversibility:** Easy — all three doc files and the CI step changes
 are independent of source.
+
+---
+
+## 2026-04-28 — Daemon-side sync wiring (post-Step-12 follow-up #1)
+
+**Context:** Closes the daemon-side gap: the CLI's `t sync` already
+POSTs to `/sync`, the daemon now actually exposes that route and runs
+sync periodically + after writes.
+
+**Choice:**
+- Extracted config (schema, defaults, paths, load/write, `isConfigured`)
+  from `src/cli/lifecycle.ts` into `src/core/config.ts`. Lifecycle
+  re-exports for backwards compatibility — no caller had to change.
+- New `src/core/debounce.ts`: trailing-edge debounce with `cancel()`
+  and `flush()`. 5 unit tests.
+- New `src/daemon/app.ts`: `createDaemonApp(store, opts)` mounts the
+  core API behind a Hono middleware that, after each successful
+  POST/PATCH (excluding `/health` and `/sync`), arms a debounced
+  trigger. Also mounts `POST /sync` for `t sync`. Returns
+  `{app, engine, syncNow, cancelPendingSync}` so `main.ts` can drive
+  the periodic interval and clean shutdown.
+- Debounce window default 1000 ms; configurable via `syncDebounceMs`
+  for tests.
+- `src/daemon/main.ts` rewritten to load config, create the daemon
+  app, set a `setInterval(syncNow, sync_interval_seconds * 1000)`, and
+  trigger one startup sync to catch up after offline gaps.
+- `src/daemon/app.test.ts`: 8 tests covering disabled-when-placeholder,
+  503 from `/sync`, real-sync-via-/sync, debounce coalescing (10 quick
+  POSTs → 1 sync), GET-doesn't-arm, 4xx-doesn't-arm, /health exempt,
+  cancelPendingSync drops queued sync. Uses the same in-process
+  Hono mock as `src/core/sync.test.ts` (anti-mocking rule preserved).
+
+**Reversibility:** Easy. The split is conventional; the daemon main
+file went from 88 lines of inline wiring to 90 lines of orchestration.
