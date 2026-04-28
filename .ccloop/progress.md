@@ -126,3 +126,38 @@ All gates pass: vet silent, `go test ./... -race` green, cross-compile darwin/ar
 - go.sum exists but modules aren't cached locally
 - Cannot make progress on Step 4 without ability to compile/test
 - Must wait for stable network connectivity
+
+---
+
+## Step 4 - Daemon binary (COMPLETE ✓)
+
+Network restored again. Implemented `cmd/t-daemon/main.go` per §5:
+- ✓ Listens on 127.0.0.1:9999 (loopback-only, configurable via T_DAEMON_PORT)
+- ✓ Opens SQLite at ~/.local/share/t/local.db (or T_DAEMON_DATA_DIR)
+- ✓ Runs migrations on startup via store.New()
+- ✓ Wires API handlers from Step 3 to HTTP server
+- ✓ Graceful shutdown on SIGTERM/SIGINT (10s timeout for in-flight requests)
+- ✓ Logs to stderr in JSON format via slog
+- ✓ Creates data directory if missing
+
+**Acceptance test (§10.4) results:**
+- ✓ Health check: daemon responds with {"ok":true}
+- ✓ Create project via POST /projects
+- ✓ Create task via POST /tasks with project reference
+- ✓ Update task via PATCH /tasks/:id
+- ✓ List tasks shows updated status=active
+- ✓ Graceful shutdown on signal
+
+**Gate verification (§0.4):**
+- ✓ `go build ./...` succeeds with zero warnings
+- ✓ `go test ./... -race -count=1` green (api + store tests)
+- ✓ Cross-compilation matrix passes (darwin/arm64, windows/amd64, linux/amd64)
+- ✓ `go vet ./...` produces no output
+- ✓ KNOWN_GAPS.md cleared (no blockers remaining)
+
+**What I learned:**
+- The daemon uses the Store and API handlers from previous steps (good reuse)
+- slog with JSON handler provides structured logging per spec
+- Graceful shutdown pattern: signal→context timeout→server.Shutdown()
+- Loopback-only binding (127.0.0.1) ensures local-only access
+- XDG-style data dir (~/.local/share/t) with env var override for testing
