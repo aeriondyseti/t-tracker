@@ -20,6 +20,6 @@
     "lineWidth": 100
   },
   "files": {
-    "ignore": ["node_modules", "dist", "bin", "legacy-go", ".vector-memory"]
+    "ignore": ["node_modules", "dist", "bin", "legacy-go", ".vector-memory", ".ccloop"]
   }
 }

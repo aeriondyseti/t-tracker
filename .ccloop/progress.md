@@ -215,3 +215,47 @@ Implemented Hono HTTP API over the store per SPEC §4:
 - GET /tasks always returns wrapped format {tasks, projects, server_time} per SPEC §4 (not bare array)
 
 **Next:** Advance to Step 4 (Daemon binary per SPEC §0.3).
+
+---
+
+## Step 4 — Daemon binary COMPLETE ✓
+
+Implemented daemon binary using Bun.serve per SPEC §5:
+
+**daemon/main.ts:**
+- ✓ Listens on `127.0.0.1:9999` (loopback-only, configurable via `T_DAEMON_PORT`)
+- ✓ Opens SQLite at platform-appropriate data directory:
+  - Linux: `~/.local/share/t/local.db`
+  - macOS: `~/Library/Application Support/t/local.db`
+  - Windows: `%LOCALAPPDATA%\t\local.db`
+  - Override via `T_DAEMON_DATA_DIR` env var
+- ✓ Creates data directory if missing (mkdirSync recursive)
+- ✓ Runs migrations on startup via `new Store(dbPath)`
+- ✓ Wires API handlers from Step 3 to `Bun.serve({ fetch: app.fetch })`
+- ✓ Graceful shutdown on SIGTERM/SIGINT (stops server, closes DB, removes PID file)
+- ✓ JSON logging to stderr via pino
+- ✓ Writes PID to `${dataDir}/daemon.pid` for `t daemon stop` and `t status`
+
+**§10.4 e2e acceptance test results:**
+- ✓ Health check: daemon responds with `{"ok":true}`
+- ✓ Create project via POST /projects
+- ✓ Create task via POST /tasks with project reference
+- ✓ Update task via PATCH /tasks/:id → status active
+- ✓ List tasks shows updated status
+- ✓ Loopback verification: external IP cannot connect to port 9999
+- ✓ Graceful shutdown on SIGTERM
+
+**Gates passed (§0.4):**
+- ✓ `bun run typecheck` — zero errors
+- ✓ `bun run lint` — zero errors (added .ccloop to ignore list in biome.json)
+- ✓ `bun test` — 44 tests passing (no new tests needed; daemon uses existing API)
+
+**What I learned:**
+- Bun.serve() takes a fetch handler directly — Hono's `app.fetch` is compatible
+- Platform detection via `process.platform` ("darwin", "win32", "linux")
+- XDG-style data directory conventions vary by platform (Application Support on macOS, AppData on Windows)
+- Bun.write() can write PID file; no fs.writeFileSync needed
+- server.stop() stops accepting new requests; existing in-flight requests complete
+- Loopback binding (hostname: "127.0.0.1") prevents external network access
+
+**Next:** Advance to Step 5 (CLI core per SPEC §0.3).
