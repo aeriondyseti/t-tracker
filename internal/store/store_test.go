@@ -2,6 +2,7 @@ package store
 
 import (
 	"testing"
+	"time"
 
 	"github.com/aerion/t/internal/model"
 	"github.com/google/uuid"
@@ -246,10 +247,10 @@ func TestGetProjectsSince(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Close()
 
+	// Ensure a millisecond gap between inbox creation and `now`.
+	time.Sleep(2 * time.Millisecond)
 	now := model.Now()
 
-	// inbox was created at startup, before now
-	// Create new project at time T
 	p := &model.Project{
 		ID:        uuid.Must(uuid.NewV7()).String(),
 		Name:      "new-project",
@@ -259,7 +260,6 @@ func TestGetProjectsSince(t *testing.T) {
 	err = s.CreateProject(p)
 	require.NoError(t, err)
 
-	// Get projects since T-1
 	projects, err := s.GetProjectsSince(now - 1)
 	require.NoError(t, err)
 	assert.Len(t, projects, 1)

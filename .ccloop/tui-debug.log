@@ -101,3 +101,5 @@
 {"ts":"2026-04-27T23:56:55.288Z","source":"ctrlc-watch","input":"","inputCodes":[],"key":{"ctrl":false,"meta":false,"shift":false,"upArrow":false,"downArrow":true,"tab":false,"return":false,"escape":false}}
 {"ts":"2026-04-27T23:56:55.356Z","source":"ctrlc-watch","input":"","inputCodes":[],"key":{"ctrl":false,"meta":false,"shift":false,"upArrow":false,"downArrow":true,"tab":false,"return":false,"escape":false}}
 {"ts":"2026-04-27T23:57:00.010Z","source":"ctrlc-watch","input":"c","inputCodes":[99],"key":{"ctrl":true,"meta":false,"shift":false,"upArrow":false,"downArrow":false,"tab":false,"return":false,"escape":false}}
+{"ts":"2026-04-28T00:02:09.656Z","source":"ctrlc-watch","input":"","inputCodes":[],"key":{"ctrl":false,"meta":true,"shift":false,"upArrow":false,"downArrow":false,"tab":false,"return":false,"escape":true}}
+{"ts":"2026-04-28T00:02:11.495Z","source":"ctrlc-watch","input":"c","inputCodes":[99],"key":{"ctrl":true,"meta":false,"shift":false,"upArrow":false,"downArrow":false,"tab":false,"return":false,"escape":false}}
