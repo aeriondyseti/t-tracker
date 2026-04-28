@@ -92,3 +92,28 @@ All 13 source files exist as placeholders. All config files are syntactically va
 - Python's json.tool and yaml parsers can validate config files without TypeScript tooling
 - The skeleton is structurally complete; only gate execution is blocked
 - LICENSE file was missing from the initial skeleton (package.json references it in files array)
+
+---
+
+## Step 1 — Skeleton COMPLETE ✓
+
+Runtime (Bun 1.3.11) became available. Ran all Step 1 gates successfully:
+
+**Gates passed (§0.4):**
+- ✓ `bun install` — 25 packages installed (commander, hono, pino, uuid, zod, @biomejs/biome, typescript)
+- ✓ `bun run typecheck` — tsc --noEmit passed with zero errors
+- ✓ `bun run lint` — Biome check passed after fixing import order in model.test.ts
+- ✓ `bun test` — 1 test passed (skeleton placeholder test)
+
+**Fixes applied:**
+- Fixed bunfig.toml syntax error (removed invalid empty array for test.preload)
+- Fixed import order in src/core/model.test.ts (alphabetical: describe, expect, test)
+- Ran `bun run format` to apply Biome formatting to all files
+
+**What I learned:**
+- Bun 1.3.11 is now available via mise (installed at ~/.local/share/mise/installs/bun/1.3.11)
+- Biome's import organizer expects alphabetical order within destructured imports
+- bunfig.toml's test.preload must be omitted if empty (not set to [])
+- All skeleton files are correct and ready for Step 2 implementation
+
+**Next:** Advance to Step 2 (Model + store implementation per SPEC §0.3).

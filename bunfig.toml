@@ -1,7 +1,3 @@
 [install]
 # Prefer exact versions for reproducible builds
 exact = true
-
-[test]
-# Preload nothing by default; tests are self-contained
-preload = []

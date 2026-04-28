@@ -8,11 +8,7 @@
     "t-daemon": "./dist/daemon/main.js",
     "t-server": "./dist/server/main.js"
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "README.md", "LICENSE"],
   "engines": {
     "bun": ">=1.1.0",
     "node": ">=20"
