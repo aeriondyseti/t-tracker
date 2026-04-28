@@ -161,3 +161,36 @@ Network restored again. Implemented `cmd/t-daemon/main.go` per §5:
 - Graceful shutdown pattern: signal→context timeout→server.Shutdown()
 - Loopback-only binding (127.0.0.1) ensures local-only access
 - XDG-style data dir (~/.local/share/t) with env var override for testing
+
+---
+
+## Step 5 - HTTP client (COMPLETE ✓)
+
+Implemented `internal/client` for CLI → daemon communication per §0.3 step 5:
+- ✓ Client struct wrapping HTTP operations to daemon
+- ✓ Health() to check daemon availability
+- ✓ CreateTask() with CreateTaskRequest (project, title, tags)
+- ✓ UpdateTask() with UpdateTaskRequest (status, title, notes, tags as pointers)
+- ✓ ListTasks() handling API's {tasks, projects, server_time} response format
+- ✓ GetTask() by ID (lists all and filters client-side)
+- ✓ CreateProject(), ListProjects(), UpdateProject() for project management
+- ✓ Error parsing from daemon JSON error responses
+- ✓ Comprehensive tests against httptest.Server using real API handlers
+
+**Tests written:**
+- TestClient: full CRUD flow (create project/task, list, update, soft delete)
+- TestClientListTasksWithSince: verify since parameter handling
+- TestClientErrors: validates error handling for missing fields, not found, invalid project
+
+**Gate verification (§0.4):**
+- ✓ `go build ./...` succeeds with zero warnings
+- ✓ `go test ./... -race -count=1` green (all 3 packages: api, client, store)
+- ✓ Cross-compilation matrix passes (darwin/arm64, windows/amd64, linux/amd64)
+- ✓ `go vet ./...` produces no output
+
+**What I learned:**
+- API always returns {tasks, projects, server_time} per §4, not bare arrays
+- Client tests use httptest.Server with real API handlers (not mocks) per spec guidance
+- Pointer fields in UpdateTaskRequest allow partial updates (only set fields are sent)
+- Error responses use {"error": "..."} format from API handlers
+- Client properly reuses established http.Client with timeout
