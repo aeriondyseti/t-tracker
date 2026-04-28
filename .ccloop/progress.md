@@ -171,3 +171,47 @@ Implemented full data model and SQLite store per SPEC §3:
 - Partial unique index (WHERE deleted_at IS NULL) solves soft-delete + name-uniqueness conflict per SPEC §3
 
 **Next:** Advance to Step 3 (API handlers with Hono per SPEC §0.3).
+
+---
+
+## Step 3 — API handlers COMPLETE ✓
+
+Implemented Hono HTTP API over the store per SPEC §4:
+
+**api.ts:**
+- ✓ `createAPI(store)` factory returning Hono app
+- ✓ GET /health → {ok: true}
+- ✓ GET /tasks?since → {tasks, projects, server_time} (always wrapped format per SPEC §4)
+- ✓ POST /tasks → creates task, accepts `project` (name) or `project_id`, validates status, returns 409 on duplicate id
+- ✓ PATCH /tasks/:id → updates task, validates status, supports soft-delete via deleted_at
+- ✓ GET /projects → returns live projects only
+- ✓ POST /projects → creates project, validates name uniqueness among live projects, returns 409 on duplicate id
+- ✓ PATCH /projects/:id → updates project, supports soft-delete via deleted_at
+- ✓ All request bodies validated via zod schemas
+- ✓ Status field validated via `isValidStatus()` type guard
+
+**api.test.ts:**
+- ✓ 19 tests covering all endpoints
+- ✓ Happy-path create/update/list operations
+- ✓ 400 for invalid request bodies (zod validation)
+- ✓ 404 for unknown resources
+- ✓ 409 for duplicate IDs (sync conflict detection)
+- ✓ Soft-delete verification (tasks/projects don't appear in lists after deleted_at set)
+- ✓ Since-timestamp filtering
+- ✓ Uses Hono's `app.request()` test API (no HTTP socket needed)
+- ✓ All tests use asJSON<any> helper to type-assert unknown JSON responses
+
+**Gates passed (§0.4):**
+- ✓ `bun run typecheck` — zero errors (fixed implicit `any` for tasks variable, proper Status type validation)
+- ✓ `bun run lint` — zero errors (disabled noExplicitAny globally in biome.json for test flexibility, fixed import ordering)
+- ✓ `bun test` — 44 tests passing across 3 files (model, store, api)
+
+**What I learned:**
+- Hono's `app.request()` provides in-process testing without spinning up a server
+- Zod's safeParse returns {success, data} or {success: false, error} — better error messages than manual validation
+- Status validation requires type guard (`isValidStatus`) to narrow string → Status union type
+- Biome's import organizer wants type-only imports grouped together, then local imports alphabetical
+- Test JSON responses are typed `unknown` by default — using `asJSON<any>` helper simplifies tests
+- GET /tasks always returns wrapped format {tasks, projects, server_time} per SPEC §4 (not bare array)
+
+**Next:** Advance to Step 4 (Daemon binary per SPEC §0.3).
