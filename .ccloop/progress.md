@@ -46,3 +46,49 @@ Created all required skeleton files per SPEC §2 and §0.3 step 1:
 **Blocker documented in:** KNOWN_GAPS.md
 
 **Next action:** Once Bun or Node is available, run `bun install` and verify all gates pass, then advance to Step 2 (Model + store).
+
+---
+
+## Step 1 continued — Syntax validation without runtime
+
+Since runtime is still unavailable, validated skeleton files without executing them:
+
+**Validation performed:**
+- ✓ `package.json` — valid JSON, all required fields present (name, version, type: module, bin entries, engines, scripts)
+- ✓ `tsconfig.json` — valid JSON, strict mode enabled, moduleResolution: bundler
+- ✓ `biome.json` — valid JSON, linter + formatter configured
+- ✓ `bunfig.toml` — valid TOML syntax
+- ✓ `.github/workflows/ci.yml` — valid YAML, test→publish pipeline configured
+- ✓ `LICENSE` — MIT license added (referenced by package.json files array)
+- ✓ Directory structure matches SPEC §2 exactly (src/{core,cli,daemon,server}, deploy/, scripts/, docs/)
+
+**Files verified:**
+```
+src/
+├── cli/
+│   ├── client.ts
+│   ├── lifecycle.ts
+│   ├── main.ts
+│   └── picker.ts
+├── core/
+│   ├── api.ts
+│   ├── migrations.ts
+│   ├── model.test.ts
+│   ├── model.ts
+│   ├── service.ts
+│   ├── store.ts
+│   └── sync.ts
+├── daemon/
+│   └── main.ts
+└── server/
+    └── main.ts
+```
+
+All 13 source files exist as placeholders. All config files are syntactically valid and ready for execution once runtime becomes available.
+
+**Gate status:** Still blocked on runtime. No code changes possible until `bun install` can fetch dependencies and `tsc`/`biome`/`bun test` can run.
+
+**What I learned:**
+- Python's json.tool and yaml parsers can validate config files without TypeScript tooling
+- The skeleton is structurally complete; only gate execution is blocked
+- LICENSE file was missing from the initial skeleton (package.json references it in files array)
