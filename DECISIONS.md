@@ -116,3 +116,34 @@ should read `KNOWN_GAPS.md` before trusting `state.json`.
   §0.5 ("'Mostly working' is not 'working'").
 
 **Reversibility:** Easy; KNOWN_GAPS.md is just a markdown file.
+
+---
+
+## 2026-04-28 — Step 7 sync engine: fetch-injectable, hostname-agnostic
+
+**Context:** Step 7 (sync engine) per SPEC.md §4 + §10.6. The acceptance
+test mandates an in-process Hono mock server fed via `app.fetch` — no
+HTTP socket — and forbids mocking the local store.
+
+**Choice:** `SyncEngine` accepts a `fetch?: FetchLike` option. Production
+defaults to `globalThis.fetch`; the test passes a fetch shim that calls
+`app.fetch(new Request(url, init))` against the mock store's Hono app.
+Pull responses are zod-validated through `SyncResponseSchema` (reuses
+`TaskSchema`/`ProjectSchema`). Step 5 push uses POST→409→PATCH exactly
+per §4 step 5; step 7 abort returns early without setMeta.
+
+**Test setup quirk:** both Stores auto-seed an "inbox" project with
+distinct UUIDv7 ids. The unique-name index on
+`projects(name) WHERE deleted_at IS NULL` would collide on first sync.
+The test soft-deletes the local inbox with `updated_at = 0` so it is
+neither pushed (excluded by `getProjectsSince(0)`) nor visible to the
+unique-name constraint, then runs sync once to pull remote's inbox as
+the live row. Documented inline.
+
+**Alternatives:**
+- Have Store accept a `seedInbox: boolean` option — rejected; the auto-
+  seed is a real product invariant and the test should live with it.
+- Mock at the HTTP layer with `msw` or similar — rejected; new dep, and
+  Hono's `app.fetch` makes mocking the request router trivial.
+
+**Reversibility:** Easy. The fetch injection point is a single option.

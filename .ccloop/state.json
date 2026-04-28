@@ -1,15 +1,29 @@
 {
-  "schema_version": 1,
-  "run_id": "e1dd727c-dd9f-4542-b1d8-69ddc47e3c6a",
-  "started_at": "2026-04-27T23:42:59.555Z",
-  "current_step": 11,
-  "wall_clock_ms": 1530446,
-  "session_id": "eb128930-6c8e-4751-afba-c05f850ca8ce",
-  "consecutive_failures": 3,
-  "no_progress_count": 0,
-  "diff_hashes_recent": [],
-  "state": "running",
-  "pause": null,
-  "escalation": null,
-  "guardrail_trip": null
+  "schema_version": 2,
+  "orchestrator": "claude-code",
+  "spec": "SPEC.md §0.3",
+  "updated_at": "2026-04-28T00:00:00Z",
+  "current_step": 8,
+  "steps": {
+    "1": { "name": "Skeleton",                "status": "done" },
+    "2": { "name": "Model + store",           "status": "done" },
+    "3": { "name": "API handlers",            "status": "done" },
+    "4": { "name": "Daemon binary",           "status": "done" },
+    "5": { "name": "CLI core",                "status": "done" },
+    "6": { "name": "CLI fzf integration",     "status": "done" },
+    "7": { "name": "Sync engine",             "status": "done" },
+    "8": { "name": "Service unit generation", "status": "todo" },
+    "9": { "name": "CLI lifecycle commands",  "status": "todo" },
+    "10": { "name": "Server binary",          "status": "todo" },
+    "11": { "name": "Docker artifacts",       "status": "todo" },
+    "12": { "name": "Documentation + CI",     "status": "todo" }
+  },
+  "gates": {
+    "typecheck": "pass",
+    "lint": "pass",
+    "test": "pass (59)",
+    "compile_linux": "pass",
+    "last_verified_at": "2026-04-28T00:00:00Z"
+  },
+  "notes": "See KNOWN_GAPS.md for the source of truth on what has actually been built. The earlier ccloop-managed counter drifted past reality; entries above reflect inspection of src/ as of this update."
 }
