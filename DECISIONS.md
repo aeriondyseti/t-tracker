@@ -216,3 +216,25 @@ endpoint list). The daemon-side wiring (calling `SyncEngine.runSync()`
 on demand) is left for the daemon refactor in step 10/11; for now the
 CLI surface is correct, and the daemon gracefully 404s if the route is
 not yet mounted. KNOWN_GAPS records this.
+
+---
+
+## 2026-04-28 — Step 10 server: app/main split for testability
+
+**Context:** §7 server reuses the core API + a bearer-token auth
+middleware. The middleware deserves unit tests, but `Bun.serve` and
+`process.exit` bound `main.ts` make it untestable as a single module.
+
+**Choice:** Split into:
+- `src/server/app.ts` — pure factory `createServerApp(store, token)`
+  that mounts the auth middleware before the core API. No Bun-only APIs;
+  unit-tested via `app.fetch(new Request(...))`.
+- `src/server/main.ts` — Bun.serve startup, env parsing, signal
+  handlers, pino logging, exit codes.
+
+`src/server/app.test.ts` covers: empty-token rejection at construction,
+`/health` exempt from auth, missing/wrong-scheme/wrong-token all 401,
+correct token passes, auth applies to writes.
+
+**Reversibility:** Easy. The split is conventional; either side can be
+inlined later.
