@@ -1,13 +1,14 @@
-# Binaries
+# Node / Bun
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.bun/
+
+# Compiled standalone binaries
 bin/
 *.exe
 *.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binaries
-*.test
 
 # Database files
 *.db
@@ -17,6 +18,11 @@ bin/
 # Environment files
 .env
 .env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
 
 # OS files
 .DS_Store
@@ -32,3 +38,7 @@ Thumbs.db
 # Temporary files
 /tmp/
 *.tmp
+
+# Legacy Go build artifacts (under legacy-go/)
+legacy-go/bin/
+legacy-go/*.test
