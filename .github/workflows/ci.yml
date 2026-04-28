@@ -18,16 +18,26 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun test
+      - name: Compile standalone CLI binary (sanity check, Linux only)
+        run: bun build --compile --target=bun-linux-x64 ./src/cli/main.ts --outfile /tmp/t-linux
 
   publish:
     needs: test
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
       - run: bun install --frozen-lockfile
       - run: bun run build
 
@@ -36,7 +46,11 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           NEW_VERSION="${VERSION}-dev.${{ github.run_number }}"
-          npm version $NEW_VERSION --no-git-tag-version
+          npm version "$NEW_VERSION" --no-git-tag-version
+
+      - name: Capture version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Publish to npm (dev)
         if: github.ref == 'refs/heads/dev'
@@ -50,16 +64,17 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Create GitHub Release
+      - name: Tag and create GitHub Release
         if: github.ref == 'refs/heads/main'
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.package-version.outputs.version }}
-          release_name: Release v${{ steps.package-version.outputs.version }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+          gh release create "v${VERSION}" --title "Release v${VERSION}" --generate-notes
 
       - name: Reset dev to main
         if: github.ref == 'refs/heads/main'

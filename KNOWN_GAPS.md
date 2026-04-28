@@ -64,8 +64,26 @@ daemon and no compose plugin, so this gate is a verification gap, not
 a code gap. The user runs §10.7 manually before declaring step 11
 fully accepted.
 
-### Still unbuilt (in order)
-- Step 12 — Docs + CI verification (`README.md`, `docs/FIRST_RUN.md`, `scripts/hotkey-snippets.md`)
+### Step 12 — completed
+`README.md`, `docs/FIRST_RUN.md` (Linux/macOS/Windows + Docker server),
+`scripts/hotkey-snippets.md` (KDE/Hammerspoon/AHKv2 + tmux). CI workflow
+patched: `gh release create` replaces deprecated
+`actions/create-release@v1`, version captured into `steps.pkg.outputs`,
+standalone-binary compile added as a CI gate, `permissions: contents:
+write` granted to the publish job so the dev-reset force-push works
+without an external PAT.
+
+### Outstanding (non-step) items
+- `t edit`: still a placeholder; needs `$EDITOR` integration. Tracked
+  separately from the step counter.
+- `t sync` CLI surface POSTs to a `/sync` endpoint that the daemon does
+  not yet expose; daemon-side `SyncEngine` wiring is pending.
+- §10.7 Docker acceptance must be run manually on a host with a Docker
+  daemon and the `docker compose` plugin (the build env had neither).
+- `t init` does not yet auto-render and install the platform service
+  unit — the renderer (`src/core/service.ts`) and lifecycle commands
+  exist independently. Wiring `installService(...)` into `runInit()` is
+  a small follow-up.
 
 ### Smaller deferred items
 - `t edit`: still a placeholder; needs `$EDITOR` integration (notes

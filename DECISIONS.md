@@ -269,3 +269,33 @@ no `docker compose` plugin. Logged in `KNOWN_GAPS.md` as a
 verification gap, not a code gap. The user runs §10.7 manually.
 
 **Reversibility:** Easy.
+
+---
+
+## 2026-04-28 — Step 12 docs + CI: gh CLI release, drop deprecated actions/create-release@v1
+
+**Context:** Step 12 final: README + FIRST_RUN + hotkey snippets, plus
+CI verification per §0.3 step 12.
+
+**Choice:**
+- `README.md` covers stack, install, commands, sync, server, first-run
+  pointer, hotkey pointer, golden-update, branching, license.
+- `docs/FIRST_RUN.md` mirrors the §13 template with three platform
+  sections (Linux/systemd-user, macOS/launchd, Windows/Task Scheduler);
+  each covers install, init, service registration check, terminal-exit
+  survival, logout/reboot survival, CRUD round-trip, plus a Docker
+  server section.
+- `scripts/hotkey-snippets.md` provides KDE (kwriteconfig5 + kdialog),
+  macOS (Hammerspoon Lua with iTerm2 + Terminal.app variants), and
+  Windows (AutoHotkey v2 with wt + cmd fallbacks). Also a tmux one-liner.
+- CI fixed: replaced the deprecated `actions/create-release@v1` with
+  `gh release create … --generate-notes`, added a `Capture version`
+  step (`steps.pkg.outputs.version`) so the publish job has a real
+  version reference, added `setup-node` so `npm publish` has a registry
+  token shape, added the `compile:linux` standalone-binary check to
+  the `test` job (the §0.4 gate), and added `permissions: contents:
+  write` so `gh release create` and `git push --force origin dev` work
+  without an external PAT.
+
+**Reversibility:** Easy — all three doc files and the CI step changes
+are independent of source.

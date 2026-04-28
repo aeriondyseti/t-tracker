@@ -4,6 +4,7 @@
   "spec": "SPEC.md §0.3",
   "updated_at": "2026-04-28T00:00:00Z",
   "current_step": 12,
+  "complete": true,
   "steps": {
     "1": { "name": "Skeleton",                "status": "done" },
     "2": { "name": "Model + store",           "status": "done" },
@@ -16,7 +17,7 @@
     "9": { "name": "CLI lifecycle commands",  "status": "done" },
     "10": { "name": "Server binary",          "status": "done" },
     "11": { "name": "Docker artifacts",       "status": "artifacts-done; §10.7 needs manual docker run (see KNOWN_GAPS)" },
-    "12": { "name": "Documentation + CI",     "status": "todo" }
+    "12": { "name": "Documentation + CI",     "status": "done" }
   },
   "gates": {
     "typecheck": "pass",
