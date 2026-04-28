@@ -1,0 +1,28 @@
+# Compose file for t-server (SPEC.md §7).
+# Mounts a named volume at /data; binds 8080 to localhost only so the
+# service is reachable only via the host's reverse proxy (nginx → t.dyseti.net).
+
+services:
+  t-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: t-server:latest
+    container_name: t-server
+    restart: unless-stopped
+    environment:
+      T_SERVER_TOKEN: ${T_SERVER_TOKEN:?T_SERVER_TOKEN is required}
+      T_SERVER_PORT: "8080"
+      T_SERVER_DB: /data/t.db
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - t-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  t-data:

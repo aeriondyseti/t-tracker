@@ -46,10 +46,26 @@ shellouts, health polling, init/status); wired into `src/cli/main.ts`
 (`t init`, `t daemon start/stop/restart/logs`, `t status`).
 `src/cli/lifecycle.test.ts` includes the §10.9 regex-based static check.
 
+### Step 10 — completed
+`src/server/app.ts` (testable factory + auth middleware) and
+`src/server/main.ts` (Bun.serve, env parsing, signals). Tests in
+`src/server/app.test.ts`.
+
+### Step 11 — artifacts written; §10.7 acceptance pending manual run
+`deploy/Dockerfile` (multi-stage, oven/bun:1-alpine, non-root) and
+`deploy/docker-compose.yml` (localhost-only :8080, named volume /data,
+required T_SERVER_TOKEN). `.dockerignore` keeps the build context to
+core + server + production deps.
+
+The §10.7 acceptance script (`docker compose build && up -d && curl
+/health && down -v`) requires a running Docker daemon and the
+`docker compose` plugin. The build host has the docker client but no
+daemon and no compose plugin, so this gate is a verification gap, not
+a code gap. The user runs §10.7 manually before declaring step 11
+fully accepted.
+
 ### Still unbuilt (in order)
-- Step 10 — Server binary with auth middleware (§7)
-- Step 11 — Docker artifacts (`deploy/Dockerfile`, `deploy/docker-compose.yml`) — gated on Step 10
-- Step 12 — Docs + CI verification
+- Step 12 — Docs + CI verification (`README.md`, `docs/FIRST_RUN.md`, `scripts/hotkey-snippets.md`)
 
 ### Smaller deferred items
 - `t edit`: still a placeholder; needs `$EDITOR` integration (notes

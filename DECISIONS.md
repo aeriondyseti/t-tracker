@@ -238,3 +238,34 @@ correct token passes, auth applies to writes.
 
 **Reversibility:** Easy. The split is conventional; either side can be
 inlined later.
+
+---
+
+## 2026-04-28 — Step 11 Docker: copy source, do not bundle
+
+**Context:** §7 mandates a multi-stage Dockerfile on `oven/bun:1-alpine`,
+non-root, with `/data` mounted as a named volume. §10.7 acceptance is a
+manual `docker compose build && up && curl /health && down`.
+
+**Choice:** Two-stage Dockerfile. Stage 1 (`oven/bun:1`, glibc) installs
+production deps via `bun install --production`. Stage 2 (`oven/bun:1-
+alpine`) copies `/src/node_modules`, `package.json`, `tsconfig.json`,
+and `src/` (via `.dockerignore` filtered down to core + server), creates
+an unprivileged `t` user, takes ownership of `/data`, and runs
+`bun run src/server/main.ts`. No `bun build` step: Bun can execute
+TypeScript directly, and pino's worker threads + bun:sqlite resolution
+make `--target=bun --compile` brittle here. The runtime image is small
+because `.dockerignore` excludes legacy-go, the CLI/daemon trees, tests,
+and dev artifacts.
+
+`docker-compose.yml` binds `127.0.0.1:8080:8080` (localhost-only per
+§7), mounts the named volume `t-data` at `/data`, and `?:`-requires
+`T_SERVER_TOKEN` so an empty value fails fast at compose parse time.
+Healthcheck pings `/health` via wget (alpine has wget; curl is missing).
+
+**Acceptance gap:** the §10.7 acceptance script needs a running Docker
+daemon; this build environment has docker the client but no daemon and
+no `docker compose` plugin. Logged in `KNOWN_GAPS.md` as a
+verification gap, not a code gap. The user runs §10.7 manually.
+
+**Reversibility:** Easy.
