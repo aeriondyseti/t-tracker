@@ -147,3 +147,28 @@ the live row. Documented inline.
   Hono's `app.fetch` makes mocking the request router trivial.
 
 **Reversibility:** Easy. The fetch injection point is a single option.
+
+---
+
+## 2026-04-28 — Step 8 service units: hand-rolled XML checks, no fast-xml-parser
+
+**Context:** §10.8 allows `fast-xml-parser` for plist/Task XML schema
+validity OR a hand-rolled regex check.
+
+**Choice:** Hand-rolled regex checks for required nodes (Label,
+ProgramArguments, RunAtLoad, KeepAlive on plist; Triggers/LogonTrigger,
+Principal/UserId, Actions/Exec/Command, MultipleInstancesPolicy on Task
+XML; section + directive presence on systemd). Avoids a new dev dep.
+
+Goldens live in `src/core/testdata/` and are regenerated via the
+`UPDATE_GOLDENS=1` env var (no `--update-snapshots` since we render
+files, not snapshots). Documented at the top of `service.test.ts`.
+
+**Daemon command form:** `daemonPath` is the absolute path to the
+compiled `t-daemon` binary (the `bun build --compile` output dropped at
+`~/.local/bin/t-daemon` by `scripts/install.sh`). The Bun-script form
+(`bun run …entry.js`) is rejected to keep the unit file user-relocatable
+and to avoid coupling the unit to the user's Bun version.
+
+**Reversibility:** Easy. `daemonArgs` is part of the config so the unit
+can carry extra flags without rev'ing the renderer.

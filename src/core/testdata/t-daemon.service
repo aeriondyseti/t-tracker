@@ -1,0 +1,14 @@
+[Unit]
+Description=t task tracker daemon
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/testuser/.local/bin/t-daemon
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
