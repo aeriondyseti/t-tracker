@@ -1,0 +1,46 @@
+{
+  "name": "t-tracker",
+  "version": "0.1.0",
+  "description": "Frictionless CLI task tracker with daemon and sync",
+  "type": "module",
+  "bin": {
+    "t": "./dist/cli/main.js",
+    "t-daemon": "./dist/daemon/main.js",
+    "t-server": "./dist/server/main.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "bun": ">=1.1.0",
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "bun build --target=node --outdir=dist --entrypoints src/cli/main.ts src/daemon/main.ts src/server/main.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test": "bun test",
+    "compile:linux": "bun build --compile --target=bun-linux-x64 ./src/cli/main.ts --outfile bin/t-linux",
+    "compile:darwin": "bun build --compile --target=bun-darwin-arm64 ./src/cli/main.ts --outfile bin/t-darwin",
+    "compile:windows": "bun build --compile --target=bun-windows-x64 ./src/cli/main.ts --outfile bin/t.exe"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "hono": "^4.6.11",
+    "pino": "^9.5.0",
+    "uuid": "^11.0.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.1.13",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
