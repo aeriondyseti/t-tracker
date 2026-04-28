@@ -117,3 +117,57 @@ Runtime (Bun 1.3.11) became available. Ran all Step 1 gates successfully:
 - All skeleton files are correct and ready for Step 2 implementation
 
 **Next:** Advance to Step 2 (Model + store implementation per SPEC §0.3).
+
+---
+
+## Step 2 — Model + store COMPLETE ✓
+
+Implemented full data model and SQLite store per SPEC §3:
+
+**model.ts:**
+- ✓ Status constants and `Status` union type
+- ✓ ProjectSchema and TaskSchema (zod)
+- ✓ Inferred Project and Task types
+- ✓ `now()` helper for unix milliseconds
+- ✓ `isValidStatus()` type guard
+
+**migrations.ts:**
+- ✓ Hand-rolled migration system with schema_version tracking in _meta
+- ✓ Migration 1: projects table with partial unique index on name (allows soft-delete + recreate)
+- ✓ Migration 1: tasks table with status CHECK constraint
+- ✓ Migration 1: indexes on project_id, status, updated_at
+- ✓ Migration 1: _meta table for sync state
+- ✓ `runMigrations(db)` with PRAGMA foreign_keys = ON
+
+**store.ts:**
+- ✓ Store class wrapping bun:sqlite Database
+- ✓ Project CRUD: createProject, getProject, getProjectByName, listProjects, updateProject
+- ✓ Project sync: getProjectsSince, upsertProject (last-write-wins on updated_at)
+- ✓ Task CRUD: createTask, getTask, listTasks (with projectId/status/tag filters), updateTask
+- ✓ Task sync: getTasksSince, upsertTask
+- ✓ Meta storage: getMeta, setMeta (for last_sync_at tracking)
+- ✓ ensureInboxProject helper (auto-creates inbox on first run)
+- ✓ Proper tag marshaling (JSON.stringify/parse for tags column)
+
+**store.test.ts:**
+- ✓ 25 tests covering all CRUD operations
+- ✓ Soft-delete verification for projects and tasks
+- ✓ Filter tests (by project, status, tag)
+- ✓ Since-timestamp queries for sync
+- ✓ Upsert tests with last-write-wins logic
+- ✓ Meta storage tests
+- ✓ All tests use :memory: SQLite for speed
+
+**Gates passed (§0.4):**
+- ✓ `bun run typecheck` — zero errors (fixed non-null assertions via stricter function signatures)
+- ✓ `bun run lint` — zero errors (fixed template literal usage, import ordering)
+- ✓ `bun test` — 25 tests passing across 2 files
+
+**What I learned:**
+- Biome's organizeImports wants import groups alphabetized within each type (external, then local)
+- Biome's noUnusedTemplateLiteral flags backticks where plain strings suffice
+- Bun's sqlite query().all() has strict type requirements on params — use string[] not unknown[]
+- Avoiding non-null assertions: make function signatures stricter (Partial<T> & { required: string })
+- Partial unique index (WHERE deleted_at IS NULL) solves soft-delete + name-uniqueness conflict per SPEC §3
+
+**Next:** Advance to Step 3 (API handlers with Hono per SPEC §0.3).
