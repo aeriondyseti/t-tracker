@@ -3,6 +3,7 @@ module github.com/aerion/t
 go 1.22
 
 require (
+	github.com/go-chi/chi/v5 v5.2.5
 	github.com/google/uuid v1.6.0
 	github.com/pressly/goose/v3 v3.19.2
 	github.com/stretchr/testify v1.9.0

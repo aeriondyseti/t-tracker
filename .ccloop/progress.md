@@ -85,3 +85,24 @@ Implemented the data model and store layer:
 - Cannot proceed to Step 3 (API handlers) until Step 2 gates pass
 - Documented the blocker in KNOWN_GAPS.md for transparency
 - This is a hard stop point - spec requires gates to pass before advancing
+
+---
+
+## Resumed: Step 2 gate cleared, Step 3 complete
+
+Network restored — `go mod tidy` succeeded. Fixed one flaky store test
+(`TestGetProjectsSince` — added a 2ms sleep so inbox.updated_at falls before
+the cutoff). All Step 2 gates clear: build, race tests, cross-compile, vet.
+
+Implemented Step 3 (`internal/api`): chi router with /health, GET/POST /tasks,
+PATCH /tasks/{id}, GET/POST /projects, PATCH /projects/{id}. Handlers reuse
+the real Store. Tests use `httptest.Server` and exercise:
+- happy path create + list
+- 400 on missing title / unknown project / invalid status
+- 409 on duplicate id
+- 404 on patch unknown
+- since= filter returns only newer rows
+- project soft-delete via PATCH
+
+All gates pass: vet silent, `go test ./... -race` green, cross-compile darwin/arm64
++ windows/amd64 succeed.
