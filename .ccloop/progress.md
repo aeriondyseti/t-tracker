@@ -106,3 +106,23 @@ the real Store. Tests use `httptest.Server` and exercise:
 
 All gates pass: vet silent, `go test ./... -race` green, cross-compile darwin/arm64
 + windows/amd64 succeed.
+
+---
+
+## Step 4 - Network outage blocking progress (CURRENT)
+
+**Situation:** Ready to implement Step 4 (Daemon binary) per §0.3, but network connectivity is down again. Cannot download modules needed to compile/test.
+
+**Evidence:** `go test ./...` fails with "dial tcp: lookup proxy.golang.org" errors. However, `go.sum` exists from previous session with 189 lines, indicating modules were successfully downloaded earlier.
+
+**Next action:** Network must be restored to continue. Once available:
+1. Verify modules download successfully
+2. Implement `cmd/t-daemon/main.go` per §5
+3. Run Step 4 gates per §0.4
+4. Advance to Step 5 (HTTP client)
+
+**What I learned:**
+- Intermittent network is a continuing blocker
+- go.sum exists but modules aren't cached locally
+- Cannot make progress on Step 4 without ability to compile/test
+- Must wait for stable network connectivity
