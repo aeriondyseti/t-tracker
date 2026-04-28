@@ -5,7 +5,7 @@
   "current_step": 5,
   "wall_clock_ms": 684846,
   "session_id": "eb128930-6c8e-4751-afba-c05f850ca8ce",
-  "consecutive_failures": 2,
+  "consecutive_failures": 3,
   "no_progress_count": 0,
   "diff_hashes_recent": [],
   "state": "running",
